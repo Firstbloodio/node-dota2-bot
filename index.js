@@ -1,10 +1,10 @@
 'use strict'
 
-const steam = require("steam"),
+const steam = require("fb-steam"),
     util    = require("util"),
     fs      = require("fs"),
     crypto  = require("crypto"),
-    dota2   = require("dota2"),
+    dota2   = require("fb-dota2"),
     queue   = require("./queue");
 
 module.exports = class DotaBot {
@@ -29,11 +29,11 @@ module.exports = class DotaBot {
         this.Dota2.ServerRegion = dota2.ServerRegion;
         this.Dota2.EResult      = dota2.EResult;
         this.Dota2.Seriestype   = dota2.SeriesType;
-        
+
         let self = this;
         // Block queue until GC is ready
         this._queue.block();
-        
+
         let onConnected = function onConnected() {
             if (debug) util.log("Connected, logging on..");
             self.steamUser.logOn(self._logonDetails);
@@ -44,7 +44,7 @@ module.exports = class DotaBot {
                 self.steamFriends.setPersonaState(steam.EPersonaState.Online);
                 // Set nickname
                 self.steamFriends.setPersonaName(self._logonDetails.persona_name);
-                
+
                 if (debug) util.log('Logged on with id = '+self.Dota2.ToAccountID(self.Dota2._client.steamID));
                 self.Dota2.launch();
                 self.Dota2.once('ready', function(){
@@ -82,7 +82,7 @@ module.exports = class DotaBot {
         this.steamClient.on('loggedOff', onSteamLogOff);
         this.steamClient.on('error', onSteamError);
         this.steamClient.on('servers', onSteamServers);
-        
+
         let onUpdateMachineAuth = function onUpdateMachineAuth(sentry, callback) {
             fs.writeFileSync('sentry', sentry.bytes)
             if (debug) util.log("sentryfile saved");
@@ -90,21 +90,21 @@ module.exports = class DotaBot {
         };
         this.steamUser.on('updateMachineAuth', onUpdateMachineAuth);
     }
-    
+
     /**
      * Get the current state of the queue
      **/
     get state() {
         return this._queue.state;
     }
-    
+
     /**
-     * Get the current rate limit factor 
+     * Get the current rate limit factor
      **/
     get rate_limit() {
         return this._queue.rate_limit;
     }
-    
+
     /**
      * Set the rate limiting factor
      * @param rate_limit #millis to wait between requests
@@ -112,14 +112,14 @@ module.exports = class DotaBot {
     set rate_limit(rate_limit) {
         this._queue.rate_limit = rate_limit;
     }
-    
+
     /**
-     * Get the current backoff time of the queue 
+     * Get the current backoff time of the queue
      **/
     get backoff() {
         return this._queue.backoff;
     }
-    
+
     /**
     * Set the backoff time of the queue
     * @param backoff #millis for exponential backoff
@@ -127,16 +127,16 @@ module.exports = class DotaBot {
     set backoff(backoff) {
         this._queue.backoff = backoff;
     }
-    
+
     /**
      * Initiates the connection to Steam and the Dota2 Game Coordinator.
      **/
     connect() {
         this.steamClient.connect();
     }
-    
+
     /**
-     * Disconnect from the Game Coordinator. This will also cancel all queued 
+     * Disconnect from the Game Coordinator. This will also cancel all queued
      * operations!
      **/
     disconnect() {
@@ -144,7 +144,7 @@ module.exports = class DotaBot {
         this.Dota2.exit();
         this.steamClient.disconnect();
     }
-    
+
     /**
      * Schedule a function for execution. This function will be executed as soon
      * as the GC is available.
@@ -153,5 +153,5 @@ module.exports = class DotaBot {
         this._queue.schedule(fn);
     }
 
-    
+
 };
